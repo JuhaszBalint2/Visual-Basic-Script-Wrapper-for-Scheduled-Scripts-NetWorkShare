@@ -1,0 +1,1526 @@
+<Window x:Class="ScriptSchedulerApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScriptSchedulerApp"
+        xmlns:converters="clr-namespace:ScriptSchedulerApp.Converters"
+        mc:Ignorable="d"
+        Title="Script Scheduler" 
+        Height="800" 
+        Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- Converter to check if value equals parameter -->
+        <converters:EqualityToVisibilityConverter x:Key="EqualityToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/> <!-- Row for buttons -->
+            <RowDefinition Height="Auto"/> <!-- Row for status bar -->
+        </Grid.RowDefinitions>
+        
+        <!-- Header with acrylic effect -->
+        <Border Grid.Row="0" Background="{StaticResource AcrylicBackgroundBrush}" Padding="20,15">
+            <TextBlock Text="Network Script Scheduler" 
+                       FontSize="24" 
+                       FontWeight="SemiBold"
+                       Foreground="{StaticResource TextPrimaryBrush}"/>
+        </Border>
+        
+        <!-- Main Content -->
+        <TabControl Grid.Row="1" 
+                    Name="MainTabControl" 
+                    Style="{StaticResource FluentTabControlStyle}">
+            
+            <!-- Script Selection Tab -->
+            <TabItem Header="Select Script" 
+                     Name="ScriptSelectionTab"
+                     Style="{StaticResource FluentTabItemStyle}">
+                <Border Style="{StaticResource FluentCardStyle}" Margin="10">
+                    <Grid Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Filter Controls -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0" 
+                                   Text="Script Type:" 
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                            
+                            <ComboBox Grid.Column="1" 
+                                  Name="ScriptTypeComboBox" 
+                                  SelectedIndex="0"
+                                  Margin="0,0,20,0"
+                                  Style="{StaticResource FluentComboBoxStyle}">
+                                <ComboBoxItem Content="All"/>
+                                <ComboBoxItem Content="PowerShell"/>
+                                <ComboBoxItem Content="Python"/>
+                                <ComboBoxItem Content="Batch"/>
+                            </ComboBox>
+                            
+                            <TextBlock Grid.Column="2" 
+                                   Text="Name Contains:" 
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                            
+                            <TextBox Grid.Column="3" 
+                                 Name="NameFilterTextBox"
+                                 Margin="0,0,20,0"
+                                 VerticalContentAlignment="Center"
+                                 Style="{StaticResource FluentTextBoxStyle}"/>
+                            
+                            <Button Grid.Column="4" 
+                                Name="ApplyFilterButton"
+                                Content="Apply Filter" 
+                                Padding="15,5"
+                                Margin="0,0,10,0"
+                                Style="{StaticResource FluentButtonStyle}"
+                                Click="ApplyFilterButton_Click"/>
+                            
+                            <Button Grid.Column="5" 
+                                Name="RefreshButton"
+                                Content="Refresh" 
+                                Padding="15,5"
+                                Style="{StaticResource FluentPrimaryButtonStyle}"
+                                Click="RefreshButton_Click"/>
+                        </Grid>
+                        
+                        <!-- Script List -->
+                        <ListView Grid.Row="1" 
+                              Name="ScriptsListView"
+                              Style="{StaticResource FluentListViewStyle}"
+                              Margin="0,0,0,10"
+                              SelectionMode="Single"
+                              SelectionChanged="ScriptsListView_SelectionChanged">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Name" Width="400" DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="Type" Width="100" DisplayMemberBinding="{Binding Type}"/>
+                                    <GridViewColumn Header="Modified" Width="150" DisplayMemberBinding="{Binding LastModified, StringFormat=yyyy-MM-dd HH:mm:ss}"/>
+                                    <GridViewColumn Header="Size (KB)" Width="100" DisplayMemberBinding="{Binding SizeKB}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        
+                        <!-- Script Details -->
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" 
+                                   Text="Selected Script:" 
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,10,5"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                            
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                 Name="SelectedScriptTextBox"
+                                 IsReadOnly="True"
+                                 Style="{StaticResource FluentTextBoxStyle}"
+                                 Margin="0,0,0,5"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" 
+                                   Text="Script Type:" 
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,10,5"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                            
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                 Name="ScriptTypeTextBox"
+                                 IsReadOnly="True"
+                                 Style="{StaticResource FluentTextBoxStyle}"
+                                 Margin="0,0,0,5"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" 
+                                   Text="Description:" 
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,10,0"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Top"/>
+                            
+                            <TextBox Grid.Row="2" Grid.Column="1" 
+                                 Name="DescriptionTextBox"
+                                 IsReadOnly="True"
+                                 Style="{StaticResource FluentTextBoxStyle}"
+                                 Height="80"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 AcceptsReturn="True"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </TabItem>
+            
+            <!-- Schedule Tab -->
+            <TabItem Header="Schedule" 
+                     Name="ScheduleTab"
+                     Style="{StaticResource FluentTabItemStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Style="{StaticResource FluentScrollViewerStyle}">
+                    <Border Style="{StaticResource FluentCardStyle}" Margin="10">
+                        <Grid Margin="5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- General Task Settings -->
+                            <GroupBox Grid.Row="0"
+                                  Header="General Task Settings"
+                                  Style="{StaticResource FluentGroupBoxStyle}"
+                                  Margin="0,0,0,15">
+                                <Grid Height="Auto">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Text="Task Name:"
+                                           Margin="0,0,10,10"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                    
+                                    <TextBox Grid.Row="0" Grid.Column="1"
+                                             Name="TaskNameTextBox"
+                                             Margin="0,0,0,10"
+                                             Style="{StaticResource FluentTextBoxStyle}"
+                                             Padding="5"/>
+                                    
+                                    <TextBlock Grid.Row="1" Grid.Column="0"
+                                               Text="Description:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Margin="0,0,10,10"/>
+                                    
+                                    <TextBox Grid.Row="1" Grid.Column="1"
+                                             Name="TaskDescriptionTextBox"
+                                             Margin="0,0,0,10"
+                                             Style="{StaticResource FluentTextBoxStyle}"
+                                             Padding="5"/>
+                                    
+                                    <TextBlock Grid.Row="2" Grid.Column="0"
+                                               Text="Security Options:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Margin="0,0,10,10"/>
+                                    
+                                    <CheckBox Grid.Row="2" Grid.Column="1"
+                                              Name="RunWithHighestPrivilegesCheckBox"
+                                              Content="Run with highest privileges"
+                                              IsChecked="True"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <TextBlock Grid.Row="3" Grid.Column="0"
+                                               Text="Run as:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               Margin="0,0,10,0"/>
+                                    
+                                    <ComboBox Grid.Row="3" Grid.Column="1"
+                                              Name="UserAccountComboBox"
+                                              Style="{StaticResource FluentComboBoxStyle}"
+                                              SelectedIndex="1"
+                                              SelectionChanged="UserAccountComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="SYSTEM"/>
+                                        <ComboBoxItem Content="Current User"/>
+                                        <ComboBoxItem Content="Specified User"/>
+                                    </ComboBox>
+                                    
+                                    <!-- Add TextBox for Specified User input -->
+                                    <StackPanel Grid.Row="4" Grid.Column="1"
+                                               Name="SpecifiedUserPanel"
+                                               Visibility="Collapsed"
+                                               Margin="0,10,0,0">
+                                        <TextBox Name="SpecifiedUserTextBox"
+                                                 Style="{StaticResource FluentTextBoxStyle}"
+                                                 Padding="5"
+                                                 ToolTip="Enter username in DOMAIN\User format"/>
+                                        <TextBlock Text="Format: DOMAIN\Username"
+                                                   Foreground="Gray"
+                                                   FontSize="11"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </GroupBox>
+                            
+                            <!-- Task Configuration -->
+                            <GroupBox Grid.Row="1"
+                                      Header="Actions"
+                                      Style="{StaticResource FluentGroupBoxStyle}"
+                                      Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>  <!-- Action type selector -->
+                                        <RowDefinition Height="*"/>     <!-- Action content -->
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Action type selector -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Action Type:"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1"
+                                                  Name="ActionTypeComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  SelectedIndex="0"
+                                                  SelectionChanged="ActionTypeComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="Run Program"/>
+                                            <ComboBoxItem Content="Send Email"/>
+                                        </ComboBox>
+                                        
+                                        <Button Grid.Column="2"
+                                                Name="AddActionButton"
+                                                Content="Add Action"
+                                                Style="{StaticResource FluentButtonStyle}"
+                                                Margin="10,0,0,0"
+                                                Click="AddActionButton_Click"
+                                                ToolTip="Add a new action to the task"/>
+                                    </Grid>
+                                    
+                                    <!-- Action content area -->
+                                    <Border Grid.Row="1"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            Padding="10"
+                                            Margin="0,0,0,10">
+                                        <Grid>
+                                            <!-- Run Program Panel (visible by default) -->
+                                            <Grid Name="RunProgramPanel" Visibility="Visible">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                            
+                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                           Text="Selected Script:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                                                         Name="ConfigScriptPathTextBox"
+                                                         IsReadOnly="True"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                                           Text="Script Type:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                                         Name="ConfigScriptTypeTextBox"
+                                                         IsReadOnly="True"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                                           Text="Script Arguments:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                                                         Name="ScriptArgumentsTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                                           Text="Working Directory:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="3" Grid.Column="1"
+                                                         Name="WorkingDirTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,10,10"
+                                                         Padding="5"/>
+                                                
+                                                <Button Grid.Row="3" Grid.Column="2"
+                                                        Name="BrowseWorkingDirButton"
+                                                        Content="..."
+                                                        Width="40"
+                                                        Style="{StaticResource FluentButtonStyle}"
+                                                        Margin="0,0,0,10"
+                                                        Click="BrowseWorkingDirButton_Click"/>
+                                                
+                                                <TextBlock Grid.Row="4" Grid.Column="0"
+                                                           Text="VBS Wrapper Location:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,10,10,10"
+                                                           Name="WrapperLocationLabel"/>
+                                                
+                                                <TextBox Grid.Row="4" Grid.Column="1"
+                                                         Name="WrapperLocationTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,10,10,10"
+                                                         Padding="5"/>
+                                                
+                                                <Button Grid.Row="4" Grid.Column="2"
+                                                        Name="BrowseWrapperLocationButton"
+                                                        Content="Browse"
+                                                        Style="{StaticResource FluentButtonStyle}"
+                                                        Padding="10,5"
+                                                        Margin="0,10,0,10"
+                                                        Click="BrowseWrapperLocationButton_Click"/>
+                                                
+                                                <Grid Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,10,0,10">
+                                                    <CheckBox Name="CreateWrapperCheckBox"
+                                                              Content="Create VBS Wrapper Script"
+                                                              IsChecked="True"
+                                                              Checked="CreateWrapperCheckBox_CheckedChanged"
+                                                              Unchecked="CreateWrapperCheckBox_CheckedChanged"/>
+                                                </Grid>
+                                                
+                                                <!-- Hidden Execution Explanation -->
+                                                <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10">
+                                                    <TextBlock Name="HiddenExplanationTextBlock"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                                               FontStyle="Italic"
+                                                               FontSize="12"
+                                                               Text="A VBS wrapper script will be created to execute the script completely hidden using WScript.Shell, with no console window. The task will point to this wrapper script instead of directly to the script. This is especially useful for scheduled tasks that should run silently in the background without interrupting users."/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <!-- Email Action Panel (hidden by default) -->
+                                            <Grid Name="EmailActionPanel" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                
+                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                           Text="From:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="0" Grid.Column="1"
+                                                         Name="EmailFromTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         ToolTip="Sender email address"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                                           Text="To:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="1" Grid.Column="1"
+                                                         Name="EmailToTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         ToolTip="Recipient email address(es). Separate multiple addresses with semicolons."
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                                           Text="Subject:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="2" Grid.Column="1"
+                                                         Name="EmailSubjectTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                                           Text="Message:"
+                                                           VerticalAlignment="Top"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,5,10,10"/>
+                                                
+                                                <TextBox Grid.Row="3" Grid.Column="1"
+                                                         Name="EmailMessageTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Height="100"
+                                                         AcceptsReturn="True"
+                                                         TextWrapping="Wrap"
+                                                         VerticalScrollBarVisibility="Auto"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="4" Grid.Column="0"
+                                                           Text="SMTP Server:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="4" Grid.Column="1"
+                                                         Name="SmtpServerTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="5" Grid.Column="0"
+                                                           Text="SMTP Port:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="5" Grid.Column="1"
+                                                         Name="SmtpPortTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Text="25"
+                                                         Padding="5"/>
+                                                
+                                                <Grid Grid.Row="6" Grid.Column="1"
+                                                      Margin="0,0,0,10">
+                                                    <CheckBox Name="SmtpSecureCheckBox"
+                                                              Content="Use Secure Connection (SSL/TLS)"
+                                                              IsChecked="True"/>
+                                                </Grid>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </GroupBox>
+                            
+                            <!-- Trigger Settings - Add back the missing controls -->
+                            <GroupBox Grid.Row="2"
+                                      Header="Trigger Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0"
+                                                  Text="Trigger Type:"
+                                                  VerticalAlignment="Center"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1"
+                                                 Name="TriggerTypeComboBox"
+                                                 Style="{StaticResource FluentComboBoxStyle}"
+                                                 SelectedIndex="0"
+                                                 SelectionChanged="TriggerTypeComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="On a schedule"/>
+                                            <ComboBoxItem Content="At system startup"/>
+                                            <ComboBoxItem Content="At log on"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    
+                                    <!-- Schedule Type Selection - Only visible when "On a schedule" is selected -->
+                                    <Grid Grid.Row="1" Margin="0,0,0,10" Name="ScheduleTypeContainer"
+                                          Visibility="{Binding ElementName=TriggerTypeComboBox, Path=SelectedIndex, Converter={StaticResource EqualityToVisibilityConverter}, ConverterParameter=0}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0"
+                                                  Text="Schedule Type:"
+                                                  VerticalAlignment="Center"
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1"
+                                                 Name="ScheduleTypeComboBox"
+                                                 Style="{StaticResource FluentComboBoxStyle}"
+                                                 SelectedIndex="0"
+                                                 SelectionChanged="ScheduleTypeComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="One time"/>
+                                            <ComboBoxItem Content="Daily"/>
+                                            <ComboBoxItem Content="Weekly"/>
+                                            <ComboBoxItem Content="Monthly"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    
+                                    <!-- Schedule Settings Container -->
+                                    <Grid Grid.Row="2" Name="TriggerSettingsContainer">
+                                        <!-- One Time Schedule Panel -->
+                                        <StackPanel Name="OneTimeSchedulePanel" Visibility="Visible">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Date:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <DatePicker Grid.Column="1"
+                                                        Name="OneTimeStartDatePicker"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Time:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <Grid Grid.Column="1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ComboBox Grid.Column="0"
+                                                            Name="OneTimeHoursComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <TextBlock Grid.Column="1"
+                                                            Text=":"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            FontWeight="Bold"
+                                                            FontSize="16"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="2"
+                                                            Name="OneTimeMinutesComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"/>
+                                                </Grid>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Daily Schedule Panel -->
+                                        <StackPanel Name="DailySchedulePanel" Visibility="Collapsed">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Every"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="DailyIntervalComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="day(s)"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Time:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <Grid Grid.Column="1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ComboBox Grid.Column="0"
+                                                            Name="DailyHoursComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <TextBlock Grid.Column="1"
+                                                            Text=":"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            FontWeight="Bold"
+                                                            FontSize="16"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="2"
+                                                            Name="DailyMinutesComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Date:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <DatePicker Grid.Column="1"
+                                                        Name="DailyStartDatePicker"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Weekly Schedule Panel -->
+                                        <StackPanel Name="WeeklySchedulePanel" Visibility="Collapsed">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Every"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="WeeklyIntervalComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="week(s)"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                            
+                                            <TextBlock Text="On these days:"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <UniformGrid Columns="4" Margin="0,0,0,10">
+                                                <CheckBox Name="MondayCheckBox"
+                                                        Content="Monday"
+                                                        Margin="0,0,10,5"
+                                                        IsChecked="True"/>
+                                                
+                                                <CheckBox Name="TuesdayCheckBox"
+                                                        Content="Tuesday"
+                                                        Margin="0,0,10,5"/>
+                                                
+                                                <CheckBox Name="WednesdayCheckBox"
+                                                        Content="Wednesday"
+                                                        Margin="0,0,10,5"/>
+                                                
+                                                <CheckBox Name="ThursdayCheckBox"
+                                                        Content="Thursday"
+                                                        Margin="0,0,10,5"/>
+                                                
+                                                <CheckBox Name="FridayCheckBox"
+                                                        Content="Friday"
+                                                        Margin="0,0,10,5"/>
+                                                
+                                                <CheckBox Name="SaturdayCheckBox"
+                                                        Content="Saturday"
+                                                        Margin="0,0,10,5"/>
+                                                
+                                                <CheckBox Name="SundayCheckBox"
+                                                        Content="Sunday"
+                                                        Margin="0,0,10,5"/>
+                                            </UniformGrid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Time:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <Grid Grid.Column="1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ComboBox Grid.Column="0"
+                                                            Name="WeeklyHoursComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <TextBlock Grid.Column="1"
+                                                            Text=":"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            FontWeight="Bold"
+                                                            FontSize="16"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="2"
+                                                            Name="WeeklyMinutesComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Date:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <DatePicker Grid.Column="1"
+                                                        Name="WeeklyStartDatePicker"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Monthly Schedule Panel -->
+                                        <StackPanel Name="MonthlySchedulePanel" Visibility="Collapsed">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                
+                                                <RadioButton Grid.Row="0"
+                                                            Name="MonthlyDayOfMonthRadio"
+                                                            Content="Day of month option"
+                                                            GroupName="MonthlyScheduleType"
+                                                            IsChecked="True"
+                                                            Margin="0,0,0,10"/>
+                                                
+                                                <Grid Grid.Row="1" Margin="20,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <TextBlock Grid.Column="0"
+                                                            Text="On day"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            Margin="0,0,10,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="1"
+                                                            Name="MonthlyDayComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,10,0"
+                                                            IsEnabled="{Binding ElementName=MonthlyDayOfMonthRadio, Path=IsChecked}"/>
+                                                    
+                                                    <TextBlock Grid.Column="2"
+                                                            Text="of every"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            Margin="0,0,10,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="3"
+                                                            Name="MonthlyIntervalComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,10,0"/>
+                                                    
+                                                    <TextBlock Grid.Column="4"
+                                                            Text="month(s)"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                
+                                                <RadioButton Grid.Row="0"
+                                                            Name="MonthlyDayOfWeekRadio"
+                                                            Content="Day of week option"
+                                                            GroupName="MonthlyScheduleType"
+                                                            Margin="0,0,0,10"/>
+                                                
+                                                <Grid Grid.Row="1" Margin="20,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <TextBlock Grid.Column="0"
+                                                            Text="On the"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            Margin="0,0,10,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="1"
+                                                            Name="MonthlyWeekComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="110"
+                                                            Margin="0,0,10,0"
+                                                            IsEnabled="{Binding ElementName=MonthlyDayOfWeekRadio, Path=IsChecked}">
+                                                        <ComboBoxItem Content="First"/>
+                                                        <ComboBoxItem Content="Second"/>
+                                                        <ComboBoxItem Content="Third"/>
+                                                        <ComboBoxItem Content="Fourth"/>
+                                                        <ComboBoxItem Content="Last"/>
+                                                    </ComboBox>
+                                                    
+                                                    <ComboBox Grid.Column="2"
+                                                            Name="MonthlyDayOfWeekComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="110"
+                                                            Margin="0,0,10,0"
+                                                            IsEnabled="{Binding ElementName=MonthlyDayOfWeekRadio, Path=IsChecked}">
+                                                        <ComboBoxItem Content="Sunday"/>
+                                                        <ComboBoxItem Content="Monday"/>
+                                                        <ComboBoxItem Content="Tuesday"/>
+                                                        <ComboBoxItem Content="Wednesday"/>
+                                                        <ComboBoxItem Content="Thursday"/>
+                                                        <ComboBoxItem Content="Friday"/>
+                                                        <ComboBoxItem Content="Saturday"/>
+                                                        <ComboBoxItem Content="Day"/>
+                                                        <ComboBoxItem Content="Weekday"/>
+                                                        <ComboBoxItem Content="Weekend day"/>
+                                                    </ComboBox>
+                                                    
+                                                    <TextBlock Grid.Column="3"
+                                                            Text="of every"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            Margin="0,0,10,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="4"
+                                                            Name="MonthlyDOWIntervalComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,10,0"
+                                                            IsEnabled="{Binding ElementName=MonthlyDayOfWeekRadio, Path=IsChecked}"/>
+                                                    
+                                                    <TextBlock Grid.Column="5"
+                                                            Text="month(s)"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Time:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <Grid Grid.Column="1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ComboBox Grid.Column="0"
+                                                            Name="MonthlyHoursComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <TextBlock Grid.Column="1"
+                                                            Text=":"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{StaticResource TextPrimaryBrush}"
+                                                            FontWeight="Bold"
+                                                            FontSize="16"
+                                                            Margin="0,0,5,0"/>
+                                                    
+                                                    <ComboBox Grid.Column="2"
+                                                            Name="MonthlyMinutesComboBox"
+                                                            Style="{StaticResource FluentComboBoxStyle}"
+                                                            Width="80"/>
+                                                </Grid>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Start Date:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <DatePicker Grid.Column="1"
+                                                        Name="MonthlyStartDatePicker"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Startup Trigger Panel -->
+                                        <StackPanel Name="StartupTriggerPanel" Visibility="Collapsed">
+                                            <TextBlock Text="The task will start each time the system starts."
+                                                      TextWrapping="Wrap"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Delay task for:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="StartupDelayComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="minutes"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Logon Trigger Panel -->
+                                        <StackPanel Name="LogonTriggerPanel" Visibility="Collapsed">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <RadioButton Grid.Column="0"
+                                                          Name="AnyUserRadioButton"
+                                                          Content="Any user"
+                                                          GroupName="LogonUserGroup"
+                                                          IsChecked="True"
+                                                          Margin="0,0,20,0"/>
+                                                
+                                                <RadioButton Grid.Column="1"
+                                                          Name="SpecificUserRadioButton"
+                                                          Content="Specific user:"
+                                                          GroupName="LogonUserGroup"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="User:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="20,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="LogonUserComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        IsEnabled="{Binding ElementName=SpecificUserRadioButton, Path=IsChecked}"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Delay task for:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="LogonDelayComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="minutes"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </GroupBox>
+                        </Grid>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+            
+            <!-- Settings Tab - Updated with all Windows Task Scheduler options -->
+            <TabItem Header="Advanced Settings" 
+                     Name="SettingsTab"
+                     Style="{StaticResource FluentTabItemStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Style="{StaticResource FluentCardStyle}" Margin="10">
+                        <Grid Margin="5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Basic Settings -->
+                            <GroupBox Grid.Row="0" 
+                                      Header="Basic Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}"
+                                      Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Name="AllowDemandCheckBox"
+                                              Content="Allow task to be run on demand"
+                                              IsChecked="True"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <CheckBox Name="RunIfMissedCheckBox"
+                                              Content="Run task as soon as possible after a scheduled start is missed"
+                                              IsChecked="True"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="If the task fails, restart every:" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1" 
+                                                  Name="RestartIntervalComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  Width="80"
+                                                  Margin="0,0,10,0"/>
+                                        
+                                        <TextBlock Grid.Column="2" 
+                                                   Text="minutes, up to:" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="3" 
+                                                  Name="RestartCountComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  Width="80"
+                                                  Margin="0,0,10,0"/>
+                                        
+                                        <TextBlock Grid.Column="4" 
+                                                   Text="times" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Advanced Settings -->
+                            <GroupBox Grid.Row="1" 
+                                      Header="Advanced Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}"
+                                      Margin="0,0,0,15">
+                                <StackPanel>
+                                    <!-- Instance Policy -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="If the task is already running:" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1"
+                                                  Name="InstancePolicyComboBox" 
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  SelectedIndex="0">
+                                            <ComboBoxItem Content="Do not start a new instance"/>
+                                            <ComboBoxItem Content="Run a new instance in parallel"/>
+                                            <ComboBoxItem Content="Stop the existing instance"/>
+                                            <ComboBoxItem Content="Queue a new instance"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    
+                                    <!-- Execution Time Limit -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="Stop the task if it runs longer than:" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1" 
+                                                  Name="ExecutionHoursComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  Width="80"
+                                                  Margin="0,0,10,0"/>
+                                        
+                                        <TextBlock Grid.Column="2" 
+                                                   Text="hours" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <CheckBox Grid.Column="3" 
+                                                  Name="NoTimeLimitCheckBox"
+                                                  Content="No time limit"/>
+                                    </Grid>
+                                    
+                                    <!-- Force Stop Option -->
+                                    <CheckBox Name="ForceStopCheckBox"
+                                              Content="If the task does not end when requested, force it to stop"
+                                              IsChecked="True"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <!-- Delete when expired -->
+                                    <CheckBox Name="DeleteWhenExpiredCheckBox"
+                                              Content="Delete the task if it is not scheduled to run again"
+                                              IsChecked="False"
+                                              Margin="0,0,0,10"/>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Power Settings -->
+                            <GroupBox Grid.Row="2" 
+                                      Header="Power Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}"
+                                      Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Name="StopOnBatteryCheckBox"
+                                              Content="Stop the task if the computer switches to battery power"
+                                              IsChecked="True"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <CheckBox Name="StartOnBatteryCheckBox"
+                                              Content="Start the task only if the computer is on AC power"
+                                              IsChecked="False"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <CheckBox Name="WakeToRunCheckBox"
+                                              Content="Wake the computer to run this task"
+                                              IsChecked="False"
+                                              Margin="0,0,0,10"/>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Network Settings -->
+                            <GroupBox Grid.Row="3" 
+                                      Header="Network Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}"
+                                      Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Name="NetworkConditionCheckBox"
+                                              Content="Run only when a network connection is available"
+                                              IsChecked="False"
+                                              Margin="0,0,0,10"/>
+                                </StackPanel>
+                            </GroupBox>
+                            
+                            <!-- Idle Settings -->
+                            <GroupBox Grid.Row="4" 
+                                      Header="Idle Settings"
+                                      Style="{StaticResource FluentGroupBoxStyle}">
+                                <StackPanel>
+                                    <CheckBox Name="IdleSettingsCheckBox"
+                                              Content="Start the task only if the computer is idle for:"
+                                              IsChecked="False"
+                                              Margin="0,0,0,10"/>
+                                    
+                                    <Grid Margin="20,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <ComboBox Grid.Column="0" 
+                                                  Name="IdleMinutesComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  Width="80"
+                                                  Margin="0,0,10,0"
+                                                  IsEnabled="{Binding ElementName=IdleSettingsCheckBox, Path=IsChecked}">
+                                            <ComboBoxItem Content="1"/>
+                                            <ComboBoxItem Content="5"/>
+                                            <ComboBoxItem Content="10" IsSelected="True"/>
+                                            <ComboBoxItem Content="15"/>
+                                            <ComboBoxItem Content="30"/>
+                                            <ComboBoxItem Content="60"/>
+                                        </ComboBox>
+                                        
+                                        <TextBlock Grid.Column="1"
+                                                   Text="minutes"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                    
+                                    <Grid Margin="20,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Wait for idle for:"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,10,0"/>
+                                        
+                                        <ComboBox Grid.Column="1"
+                                                  Name="WaitTimeoutComboBox"
+                                                  Style="{StaticResource FluentComboBoxStyle}"
+                                                  Width="80"
+                                                  Margin="0,0,10,0"
+                                                  IsEnabled="{Binding ElementName=IdleSettingsCheckBox, Path=IsChecked}">
+                                            <ComboBoxItem Content="30"/>
+                                            <ComboBoxItem Content="60" IsSelected="True"/>
+                                            <ComboBoxItem Content="90"/>
+                                            <ComboBoxItem Content="120"/>
+                                            <ComboBoxItem Content="240"/>
+                                        </ComboBox>
+                                        
+                                        <TextBlock Grid.Column="2"
+                                                   Text="minutes"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </Grid>
+                                    
+                                    <CheckBox Name="StopOnIdleEndCheckBox"
+                                              Content="Stop if the computer ceases to be idle"
+                                              IsChecked="True"
+                                              Margin="20,0,0,10"
+                                              IsEnabled="{Binding ElementName=IdleSettingsCheckBox, Path=IsChecked}"/>
+                                    
+                                    <CheckBox Name="RestartOnIdleCheckBox"
+                                              Content="Restart if the idle state resumes"
+                                              IsChecked="False"
+                                              Margin="20,0,0,10"
+                                              IsEnabled="{Binding ElementName=StopOnIdleEndCheckBox, Path=IsChecked}"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+                    </Border>
+                </ScrollViewer>
+            </TabItem>
+            
+            <!-- Summary Tab -->
+            <TabItem Header="Summary" 
+                     Name="SummaryTab"
+                     Style="{StaticResource FluentTabItemStyle}">
+                <Border Style="{StaticResource FluentCardStyle}" Margin="10">
+                    <Grid Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Task Summary -->
+                        <ScrollViewer Grid.Row="0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      Margin="0,0,0,15"
+                                      Style="{StaticResource FluentScrollViewerStyle}">
+                            <TextBox Name="TaskSummaryTextBox"
+                                     Style="{StaticResource FluentTextBoxStyle}"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     MinHeight="400"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
+        
+        <!-- Navigation Buttons -->
+        <Grid Grid.Row="2" Margin="10,0,10,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button Grid.Column="0" 
+                    Name="BackButton" 
+                    Content="Back" 
+                    Width="100"
+                    Style="{StaticResource FluentButtonStyle}"
+                    Click="BackButton_Click"
+                    Visibility="Visible"/>
+            
+            <Button Grid.Column="2" 
+                    Name="NextButton" 
+                    Content="Next" 
+                    Width="100"
+                    Style="{StaticResource FluentButtonStyle}"
+                    Click="NextButton_Click"
+                    Margin="0,0,10,0"/>
+            
+            <Button Grid.Column="3" 
+                    Name="CreateTaskButton" 
+                    Content="Create Task" 
+                    Width="150"
+                    Style="{StaticResource FluentPrimaryButtonStyle}"
+                    Click="CreateTaskButton_Click"
+                    Visibility="Collapsed"/>
+        </Grid>
+        
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="3" 
+                   Background="{StaticResource StatusBarBackgroundBrush}"
+                   Foreground="{StaticResource TextPrimaryBrush}">
+            <StatusBarItem>
+                <TextBlock Name="StatusTextBlock" 
+                           Text="Ready"
+                           Foreground="{StaticResource TextPrimaryBrush}"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

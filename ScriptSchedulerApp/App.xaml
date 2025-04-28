@@ -1,0 +1,26 @@
+<Application x:Class="ScriptSchedulerApp.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/FluentDesignStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Global Colors (Kept for backward compatibility) -->
+            <SolidColorBrush x:Key="PrimaryColor" Color="#0078D7"/>
+            <SolidColorBrush x:Key="SecondaryColor" Color="#E6E6E6"/>
+            <SolidColorBrush x:Key="AccentColor" Color="#0069BC"/>
+            <SolidColorBrush x:Key="BackgroundColor" Color="#F2F2F2"/>
+            <SolidColorBrush x:Key="TextColor" Color="#333333"/>
+            
+            <!-- Override default ComboBox and ComboBoxItem styles for better appearance -->
+            <Style TargetType="ComboBox" BasedOn="{StaticResource FluentComboBoxStyle}">
+                <Setter Property="OverridesDefaultStyle" Value="False" />
+            </Style>
+            
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource FluentComboBoxItemStyle}" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
