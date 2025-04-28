@@ -20,6 +20,7 @@
 - [x] Windows Credential Manager integration
 - [x] Reliable C# wrapper compilation
 - [x] Command-line interface for automation
+- [x] Windows 10/11 compatibility with required admin privileges
 
 ## Completion Criteria
 - All scripts can be run from network shares without errors
@@ -28,6 +29,7 @@
 - No hard-coded paths or credentials
 - No dependencies on external scripts (PowerShell, VBS)
 - Reliable wrapper compilation process
+- Application runs with required privileges on supported operating systems
 
 ## Completed Tasks
 - Initial implementation of script wrapper generator
@@ -45,6 +47,7 @@
   - Implemented power, network, and idle condition settings
   - Added multiple instances policy options
   - Enhanced security and execution options
+- Added manifest configuration for Windows 10/11 compatibility and required admin privileges
 
 ## Current Development
 - [x] Fix UI reference errors in MainWindow.xaml and MainWindow.xaml.cs

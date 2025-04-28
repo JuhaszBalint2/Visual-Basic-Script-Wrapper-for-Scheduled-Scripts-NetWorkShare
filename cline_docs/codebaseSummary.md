@@ -8,6 +8,7 @@
     - **ScriptManager.cs**: Manages script-related operations.
     - **CredentialManagerHelper.cs**: Handles interaction with Windows Credential Manager.
     - **TaskSchedulerExtensions.cs**: Provides extension methods for enhanced Windows Task Scheduler integration.
+    - **app.manifest**: Controls application permissions and OS compatibility requirements.
 - **VBSWrapper (Directory)**: Default location for generated VBS wrappers and their logs.
 
 ## Data Flow
@@ -27,8 +28,15 @@
 - **Windows Script Host (WScript.exe)**: Required to execute the generated VBS wrappers.
 - **Target Script Runtimes**: (e.g., PowerShell, Python) must be installed on the target machine where the task runs.
 - **Administrative privileges**: Required for task creation/modification.
+- **Windows 10 or Windows 11**: Application is configured to run only on these operating systems.
 
 ## Recent Significant Changes
+- **Updated App Manifest Configuration**:
+  - Modified app.manifest to only support Windows 10 and Windows 11
+  - Ensured application always runs with administrator privileges
+  - Added proper theme dependency for Windows common controls
+  - Verified manifest is referenced correctly in project file
+
 - **Fixed Compiler Errors and UI Control Issues**:
   - Created missing EqualityToVisibilityConverter class for XAML visibility binding
   - Added email-related UI controls (EmailActionPanel, EmailFromTextBox, etc.)
@@ -73,3 +81,4 @@
 - **VBS UNC Path Error Fixed**: Addressed the "Invalid path specified" error when using UNC paths by modifying VBS generation.
 - **Path Handling**: Previous issues with spaces in paths were addressed in C# logic and VBS generation quoting.
 - **Error Handling**: Ongoing improvements, VBS wrapper includes basic logging.
+- **Administrative Privileges**: Application now ensures it always runs with required privileges for task creation.
