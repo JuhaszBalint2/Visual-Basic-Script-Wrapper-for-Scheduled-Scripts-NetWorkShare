@@ -15,7 +15,7 @@ namespace ScriptSchedulerApp
         /// </summary>
         /// <param name="td">The task definition to modify</param>
         /// <param name="actions">Dictionary of action parameters</param>
-        public static void AddMultipleActions(this TaskDefinition td, Dictionary<string, object> actions)
+        public static void AddStandardActionsFromDictionary(this TaskDefinition td, Dictionary<string, object> actions) // Renamed method
         {
             // Check if the actions dictionary contains program actions
             if (actions.TryGetValue("ProgramActions", out object programActionsObj) && 

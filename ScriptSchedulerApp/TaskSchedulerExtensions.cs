@@ -140,6 +140,25 @@ namespace ScriptSchedulerApp
             {
                 td.Settings.AllowHardTerminate = forceStop;
             }
+            
+            // Task compatibility level (which Windows versions the task is compatible with)
+            if (options.TryGetValue("Compatibility", out object compatibilityObj) && int.TryParse(compatibilityObj.ToString(), out int compatibility))
+            {
+                td.Settings.Compatibility = (TaskCompatibility)compatibility;
+            }
+            
+            // Additional advanced settings
+            // Do not store password option
+            if (options.TryGetValue("DoNotStorePassword", out object doNotStorePasswordObj) && doNotStorePasswordObj is bool doNotStorePassword)
+            {
+                td.Principal.LogonType = doNotStorePassword ? TaskLogonType.S4U : td.Principal.LogonType;
+            }
+            
+            // Run whether user is logged on or not
+            if (options.TryGetValue("RunWhetherLoggedOn", out object runWhetherLoggedOnObj) && runWhetherLoggedOnObj is bool runWhetherLoggedOn)
+            {
+                td.Principal.LogonType = runWhetherLoggedOn ? TaskLogonType.Password : TaskLogonType.InteractiveToken;
+            }
         }
 
         /// <summary>
@@ -182,6 +201,155 @@ namespace ScriptSchedulerApp
             td.Actions.Add(emailAction);
             
             return emailAction;
+        }
+        
+        /// <summary>
+        /// Creates a display message action for a task definition
+        /// </summary>
+        /// <param name="td">The task definition to enhance</param>
+        /// <param name="title">Title of the message</param>
+        /// <param name="message">Content of the message</param>
+        /// <returns>The added show message action</returns>
+        public static ShowMessageAction CreateDisplayMessageAction(this TaskDefinition td, string title, string message)
+        {
+            // Create a new display message action
+            var messageAction = new ShowMessageAction(title, message);
+            
+            // Add the action to the task definition
+            td.Actions.Add(messageAction);
+            
+            return messageAction;
+        }
+        
+        /// <summary>
+        /// Creates an IdleTrigger for the task definition
+        /// </summary>
+        /// <param name="td">The task definition to modify</param>
+        /// <param name="startBoundary">Optional start boundary for the trigger</param>
+        /// <param name="endBoundary">Optional end boundary for the trigger</param>
+        /// <returns>The created trigger</returns>
+        public static IdleTrigger CreateIdleTrigger(this TaskDefinition td, DateTime? startBoundary = null, DateTime? endBoundary = null)
+        {
+            var trigger = new IdleTrigger();
+            
+            if (startBoundary.HasValue)
+                trigger.StartBoundary = startBoundary.Value;
+                
+            if (endBoundary.HasValue)
+                trigger.EndBoundary = endBoundary.Value;
+                
+            td.Triggers.Add(trigger);
+            return trigger;
+        }
+        
+        /// <summary>
+        /// Creates an EventTrigger for the task definition
+        /// </summary>
+        /// <param name="td">The task definition to modify</param>
+        /// <param name="logName">Event log name (e.g., "System", "Application")</param>
+        /// <param name="source">Source of the event (e.g., "Application Error")</param>
+        /// <param name="eventId">Event ID to filter on. Use null for all events.</param>
+        /// <param name="startBoundary">Optional start boundary for the trigger</param>
+        /// <param name="endBoundary">Optional end boundary for the trigger</param>
+        /// <returns>The created trigger</returns>
+        public static EventTrigger CreateEventTrigger(this TaskDefinition td, string logName, string source = null, int? eventId = null, DateTime? startBoundary = null, DateTime? endBoundary = null)
+        {
+            var trigger = new EventTrigger();
+            
+            var query = new StringBuilder();
+            query.Append("<QueryList><Query Id=\"0\" Path=\"").Append(logName).Append("\"><Select Path=\"").Append(logName).Append("\">");
+            query.Append("*");
+            
+            if (!string.IsNullOrEmpty(source))
+            {
+                query.Append("[System/Provider/@Name='").Append(source).Append("']");
+            }
+            
+            if (eventId.HasValue)
+            {
+                query.Append("[System/EventID=").Append(eventId.Value).Append("]");
+            }
+            
+            query.Append("</Select></Query></QueryList>");
+            
+            trigger.Subscription = query.ToString();
+            
+            if (startBoundary.HasValue)
+                trigger.StartBoundary = startBoundary.Value;
+                
+            if (endBoundary.HasValue)
+                trigger.EndBoundary = endBoundary.Value;
+                
+            td.Triggers.Add(trigger);
+            return trigger;
+        }
+        
+        /// <summary>
+        /// Creates a SessionStateChangeTrigger for the task definition
+        /// </summary>
+        /// <param name="td">The task definition to modify</param>
+        /// <param name="stateChange">The session state change that will trigger the task</param>
+        /// <param name="userId">Specific user ID to monitor, or null for all users</param>
+        /// <param name="startBoundary">Optional start boundary for the trigger</param>
+        /// <param name="endBoundary">Optional end boundary for the trigger</param>
+        /// <returns>The created trigger</returns>
+        public static SessionStateChangeTrigger CreateSessionStateChangeTrigger(this TaskDefinition td, TaskSessionStateChangeType stateChange, string userId = null, DateTime? startBoundary = null, DateTime? endBoundary = null)
+        {
+            var trigger = new SessionStateChangeTrigger(stateChange);
+            
+            if (!string.IsNullOrEmpty(userId))
+                trigger.UserId = userId;
+                
+            if (startBoundary.HasValue)
+                trigger.StartBoundary = startBoundary.Value;
+                
+            if (endBoundary.HasValue)
+                trigger.EndBoundary = endBoundary.Value;
+                
+            td.Triggers.Add(trigger);
+            return trigger;
+        }
+        
+        /// <summary>
+        /// Creates a RegistrationTrigger for the task definition (runs on task creation/modification)
+        /// </summary>
+        /// <param name="td">The task definition to modify</param>
+        /// <param name="delay">Delay before starting the task</param>
+        /// <param name="startBoundary">Optional start boundary for the trigger</param>
+        /// <param name="endBoundary">Optional end boundary for the trigger</param>
+        /// <returns>The created trigger</returns>
+        public static RegistrationTrigger CreateRegistrationTrigger(this TaskDefinition td, TimeSpan? delay = null, DateTime? startBoundary = null, DateTime? endBoundary = null)
+        {
+            var trigger = new RegistrationTrigger();
+            
+            if (delay.HasValue)
+                trigger.Delay = delay.Value;
+                
+            if (startBoundary.HasValue)
+                trigger.StartBoundary = startBoundary.Value;
+                
+            if (endBoundary.HasValue)
+                trigger.EndBoundary = endBoundary.Value;
+                
+            td.Triggers.Add(trigger);
+            return trigger;
+        }
+        
+        /// <summary>
+        /// Adds repetition pattern to an existing trigger
+        /// </summary>
+        /// <param name="trigger">The trigger to modify</param>
+        /// <param name="interval">The interval between repetitions</param>
+        /// <param name="duration">The duration of the repetition pattern, or TimeSpan.Zero for indefinite</param>
+        /// <param name="stopAtDurationEnd">Whether to stop at the end of the duration</param>
+        /// <returns>The modified trigger</returns>
+        public static Trigger AddRepetitionPattern(this Trigger trigger, TimeSpan interval, TimeSpan duration, bool stopAtDurationEnd = true)
+        {
+            trigger.Repetition.Interval = interval;
+            trigger.Repetition.Duration = duration;
+            trigger.Repetition.StopAtDurationEnd = stopAtDurationEnd;
+            
+            return trigger;
         }
     }
 }

@@ -316,6 +316,7 @@
                                                   SelectionChanged="ActionTypeComboBox_SelectionChanged">
                                             <ComboBoxItem Content="Run Program"/>
                                             <ComboBoxItem Content="Send Email"/>
+                                            <ComboBoxItem Content="Display Message"/>
                                         </ComboBox>
                                         
                                         <Button Grid.Column="2"
@@ -438,6 +439,47 @@
                                                               Checked="CreateWrapperCheckBox_CheckedChanged"
                                                               Unchecked="CreateWrapperCheckBox_CheckedChanged"/>
                                                 </Grid>
+                                            
+                                            <!-- Display Message Panel (hidden by default) -->
+                                            <Grid Name="DisplayMessagePanel" Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                
+                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                           Text="Message Title:"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,0,10,10"/>
+                                                
+                                                <TextBox Grid.Row="0" Grid.Column="1"
+                                                         Name="MessageTitleTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Padding="5"/>
+                                                
+                                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                                           Text="Message Text:"
+                                                           VerticalAlignment="Top"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           Margin="0,5,10,10"/>
+                                                
+                                                <TextBox Grid.Row="1" Grid.Column="1"
+                                                         Name="MessageTextTextBox"
+                                                         Style="{StaticResource FluentTextBoxStyle}"
+                                                         Margin="0,0,0,10"
+                                                         Height="100"
+                                                         AcceptsReturn="True"
+                                                         TextWrapping="Wrap"
+                                                         VerticalScrollBarVisibility="Auto"
+                                                         Padding="5"/>
+                                            </Grid>
                                                 
                                                 <!-- Hidden Execution Explanation -->
                                                 <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,10">
@@ -588,6 +630,10 @@
                                             <ComboBoxItem Content="On a schedule"/>
                                             <ComboBoxItem Content="At system startup"/>
                                             <ComboBoxItem Content="At log on"/>
+                                            <ComboBoxItem Content="On idle"/>
+                                            <ComboBoxItem Content="On an event"/>
+                                            <ComboBoxItem Content="At task creation/modification"/>
+                                            <ComboBoxItem Content="On session change"/>
                                         </ComboBox>
                                     </Grid>
                                     
@@ -1163,6 +1209,250 @@
                                                         Style="{StaticResource FluentComboBoxStyle}"
                                                         Width="80"
                                                         Margin="0,0,10,0"/>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="minutes"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Idle Trigger Panel -->
+                                        <StackPanel Name="IdleTriggerPanel" Visibility="Collapsed">
+                                            <TextBlock Text="The task will start when the computer has been idle for the specified period."
+                                                      TextWrapping="Wrap"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Wait for idle for:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="IdleTriggerMinutesComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0">
+                                                    <ComboBoxItem Content="1"/>
+                                                    <ComboBoxItem Content="5"/>
+                                                    <ComboBoxItem Content="10" IsSelected="True"/>
+                                                    <ComboBoxItem Content="15"/>
+                                                    <ComboBoxItem Content="30"/>
+                                                    <ComboBoxItem Content="60"/>
+                                                </ComboBox>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="minutes"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Event Trigger Panel -->
+                                        <StackPanel Name="EventTriggerPanel" Visibility="Collapsed">
+                                            <TextBlock Text="The task will start when the specified event is logged."
+                                                      TextWrapping="Wrap"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Log:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="EventLogComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}">
+                                                    <ComboBoxItem Content="Application" IsSelected="True"/>
+                                                    <ComboBoxItem Content="System"/>
+                                                    <ComboBoxItem Content="Security"/>
+                                                </ComboBox>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Source:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBox Grid.Column="1"
+                                                        Name="EventSourceTextBox"
+                                                        Style="{StaticResource FluentTextBoxStyle}"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Event ID:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <TextBox Grid.Column="1"
+                                                        Name="EventIdTextBox"
+                                                        Style="{StaticResource FluentTextBoxStyle}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Registration Trigger Panel -->
+                                        <StackPanel Name="RegistrationTriggerPanel" Visibility="Collapsed">
+                                            <TextBlock Text="The task will start when the task is registered or modified."
+                                                      TextWrapping="Wrap"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Delay task for:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="RegistrationDelayComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0">
+                                                    <ComboBoxItem Content="0" IsSelected="True"/>
+                                                    <ComboBoxItem Content="1"/>
+                                                    <ComboBoxItem Content="5"/>
+                                                    <ComboBoxItem Content="10"/>
+                                                    <ComboBoxItem Content="30"/>
+                                                    <ComboBoxItem Content="60"/>
+                                                </ComboBox>
+                                                
+                                                <TextBlock Grid.Column="2"
+                                                        Text="minutes"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                        
+                                        <!-- Session State Change Trigger Panel -->
+                                        <StackPanel Name="SessionStateTriggerPanel" Visibility="Collapsed">
+                                            <TextBlock Text="The task will start when the specified session state change occurs."
+                                                      TextWrapping="Wrap"
+                                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                                      Margin="0,0,0,10"/>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="State change:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="SessionStateComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}">
+                                                    <ComboBoxItem Content="Session Connect" Tag="1" IsSelected="True"/>
+                                                    <ComboBoxItem Content="Session Disconnect" Tag="2"/>
+                                                    <ComboBoxItem Content="Remote Connect" Tag="3"/>
+                                                    <ComboBoxItem Content="Remote Disconnect" Tag="4"/>
+                                                    <ComboBoxItem Content="Session Lock" Tag="7"/>
+                                                    <ComboBoxItem Content="Session Unlock" Tag="8"/>
+                                                </ComboBox>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <RadioButton Grid.Column="0"
+                                                          Name="SessionAnyUserRadioButton"
+                                                          Content="Any user"
+                                                          GroupName="SessionUserGroup"
+                                                          IsChecked="True"
+                                                          Margin="0,0,20,0"/>
+                                                
+                                                <RadioButton Grid.Column="1"
+                                                          Name="SessionSpecificUserRadioButton"
+                                                          Content="Specific user:"
+                                                          GroupName="SessionUserGroup"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="User:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="20,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="SessionUserComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        IsEnabled="{Binding ElementName=SessionSpecificUserRadioButton, Path=IsChecked}"/>
+                                            </Grid>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                        Text="Delay task for:"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                                        Margin="0,0,10,0"/>
+                                                
+                                                <ComboBox Grid.Column="1"
+                                                        Name="SessionDelayComboBox"
+                                                        Style="{StaticResource FluentComboBoxStyle}"
+                                                        Width="80"
+                                                        Margin="0,0,10,0">
+                                                    <ComboBoxItem Content="0" IsSelected="True"/>
+                                                    <ComboBoxItem Content="1"/>
+                                                    <ComboBoxItem Content="5"/>
+                                                    <ComboBoxItem Content="10"/>
+                                                    <ComboBoxItem Content="30"/>
+                                                    <ComboBoxItem Content="60"/>
+                                                </ComboBox>
                                                 
                                                 <TextBlock Grid.Column="2"
                                                         Text="minutes"

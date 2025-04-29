@@ -31,6 +31,11 @@
 - **Windows 10 or Windows 11**: Application is configured to run only on these operating systems.
 
 ## Recent Significant Changes
+- **Resolved Method Ambiguities and Missing Reference**:
+  - Fixed CS0121 (ambiguous call) for `AddMultipleActions` by renaming conflicting extension methods in `TaskDefinitionExtensions.cs` and `TaskSchedulerActions.cs` to `AddDisplayMessageActionsFromList` and `AddStandardActionsFromDictionary` respectively. Updated call sites accordingly.
+  - Fixed CS0121 (ambiguous call) for `EnhanceTaskDefinition` by renaming the method in `TaskDefinitionExtensions.cs` to `ApplySpecificSettings`. (The call site in `ScriptManager.cs` already explicitly called the `TaskSchedulerExtensions` version).
+  - Fixed CS0103 (missing `Path`) by adding `using System.IO;` to `TaskDefinitionExtensions.cs`.
+- **Fixed TaskAction Accessibility**: Changed the `TaskAction` nested class in `MainWindow.xaml.cs` from `private` to `internal` to resolve CS0122 compiler error when accessed by `DisplayMessageAction`.
 - **Updated App Manifest Configuration**:
   - Modified app.manifest to only support Windows 10 and Windows 11
   - Ensured application always runs with administrator privileges

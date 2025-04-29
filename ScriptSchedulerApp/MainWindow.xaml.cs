@@ -35,7 +35,7 @@ namespace ScriptSchedulerApp
         private bool _isWindowInitialized = false;
 
         // Helper class to represent different action types
-        private abstract class TaskAction
+        internal abstract class TaskAction
         {
             public abstract string ActionType { get; }
             public abstract string GetSummary();
@@ -130,7 +130,7 @@ namespace ScriptSchedulerApp
         // Helper to set visibility without triggering errors
         private void SetActionPanelVisibility()
         {
-            if (!_isWindowInitialized || RunProgramPanel == null || EmailActionPanel == null)
+            if (!_isWindowInitialized || RunProgramPanel == null || EmailActionPanel == null || DisplayMessagePanel == null)
             {
                 return;
             }
@@ -138,6 +138,7 @@ namespace ScriptSchedulerApp
             // Hide all action panels first
             RunProgramPanel.Visibility = Visibility.Collapsed;
             EmailActionPanel.Visibility = Visibility.Collapsed;
+            DisplayMessagePanel.Visibility = Visibility.Collapsed;
             
             // Show the appropriate panel based on selection
             if (ActionTypeComboBox?.SelectedItem is ComboBoxItem selectedItem)
@@ -149,6 +150,9 @@ namespace ScriptSchedulerApp
                         break;
                     case "Send Email":
                         EmailActionPanel.Visibility = Visibility.Visible;
+                        break;
+                    case "Display Message":
+                        DisplayMessagePanel.Visibility = Visibility.Visible;
                         break;
                 }
             }
@@ -633,9 +637,19 @@ namespace ScriptSchedulerApp
             if (OneTimeSchedulePanel != null) OneTimeSchedulePanel.Visibility = Visibility.Collapsed;
             if (DailySchedulePanel != null) DailySchedulePanel.Visibility = Visibility.Collapsed;
             if (WeeklySchedulePanel != null) WeeklySchedulePanel.Visibility = Visibility.Collapsed;
-            if (StartupTriggerPanel != null) StartupTriggerPanel.Visibility = Visibility.Collapsed; // Corrected name
-            if (LogonTriggerPanel != null) LogonTriggerPanel.Visibility = Visibility.Collapsed;   // Corrected name
-
+            if (MonthlySchedulePanel != null) MonthlySchedulePanel.Visibility = Visibility.Collapsed;
+            if (StartupTriggerPanel != null) StartupTriggerPanel.Visibility = Visibility.Collapsed;
+            if (LogonTriggerPanel != null) LogonTriggerPanel.Visibility = Visibility.Collapsed;
+            if (IdleTriggerPanel != null) IdleTriggerPanel.Visibility = Visibility.Collapsed;
+            if (EventTriggerPanel != null) EventTriggerPanel.Visibility = Visibility.Collapsed;
+            if (RegistrationTriggerPanel != null) RegistrationTriggerPanel.Visibility = Visibility.Collapsed;
+            if (SessionStateTriggerPanel != null) SessionStateTriggerPanel.Visibility = Visibility.Collapsed;
+            
+            // Hide schedule type container for non-schedule triggers
+            if (ScheduleTypeContainer != null)
+                ScheduleTypeContainer.Visibility = TriggerTypeComboBox.SelectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
+            
+            // Show the appropriate panel based on selection
             if (TriggerTypeComboBox?.SelectedItem is ComboBoxItem selectedItem) // Added null-conditional operator for safety
             {
                 switch (selectedItem.Content.ToString())
@@ -643,13 +657,26 @@ namespace ScriptSchedulerApp
                     case "On a schedule":
                         // For now, simply show the OneTimeSchedulePanel
                         // We'll add ScheduleTypeComboBox in the future for more options
-                        if (OneTimeSchedulePanel != null) OneTimeSchedulePanel.Visibility = Visibility.Visible;
+                        if (ScheduleTypeComboBox != null)
+                            ScheduleTypeComboBox_SelectionChanged(ScheduleTypeComboBox, null);
                         break;
                     case "At system startup":
-                        if (StartupTriggerPanel != null) StartupTriggerPanel.Visibility = Visibility.Visible; // Corrected name
+                        if (StartupTriggerPanel != null) StartupTriggerPanel.Visibility = Visibility.Visible;
                         break;
                     case "At log on":
-                        if (LogonTriggerPanel != null) LogonTriggerPanel.Visibility = Visibility.Visible;   // Corrected name
+                        if (LogonTriggerPanel != null) LogonTriggerPanel.Visibility = Visibility.Visible;
+                        break;
+                    case "On idle":
+                        if (IdleTriggerPanel != null) IdleTriggerPanel.Visibility = Visibility.Visible;
+                        break;
+                    case "On an event":
+                        if (EventTriggerPanel != null) EventTriggerPanel.Visibility = Visibility.Visible;
+                        break;
+                    case "At task creation/modification":
+                        if (RegistrationTriggerPanel != null) RegistrationTriggerPanel.Visibility = Visibility.Visible;
+                        break;
+                    case "On session change":
+                        if (SessionStateTriggerPanel != null) SessionStateTriggerPanel.Visibility = Visibility.Visible;
                         break;
                 }
             }
@@ -982,6 +1009,19 @@ namespace ScriptSchedulerApp
                 string triggerType = GetSelectedTriggerType();
                 DateTime startTime = GetStartTimeFromUI(triggerType);
                 Dictionary<string, object> triggerParams = GetTriggerParameters(triggerType);
+                
+                // Check if we need to add any display message actions
+                if (_taskActions.Count > 0 && _taskActions.Any(a => a is DisplayMessageAction))
+                {
+                    Dictionary<string, object> additionalActions = new Dictionary<string, object>();
+                    var displayMessageActions = _taskActions.OfType<DisplayMessageAction>().ToList();
+                    
+                    if (displayMessageActions.Any())
+                    {
+                        additionalActions["DisplayMessageActions"] = displayMessageActions;
+                        triggerParams["AdditionalActions"] = additionalActions;
+                    }
+                }
 
                 // Use ScriptManager to create the task
                 bool result = ScriptManager.Instance.CreateScheduledTask(
@@ -1048,6 +1088,18 @@ namespace ScriptSchedulerApp
                         break;
                     case "At log on":
                         triggerType = "LOGON";
+                        break;
+                    case "On idle":
+                        triggerType = "IDLE";
+                        break;
+                    case "On an event":
+                        triggerType = "EVENT";
+                        break;
+                    case "At task creation/modification":
+                        triggerType = "REGISTRATION";
+                        break;
+                    case "On session change":
+                        triggerType = "SESSION_STATE_CHANGE";
                         break;
                     default:
                         triggerType = "ONCE";
@@ -1323,6 +1375,87 @@ namespace ScriptSchedulerApp
                             {
                                 parameters["LogonUser"] = logonUser;
                             }
+                        }
+                        break;
+                        
+                    case "IDLE":
+                        // For idle trigger, the idle time is set in the TaskDefinition settings
+                        // So we don't need to add specific parameters here
+                        if (IdleTriggerMinutesComboBox.SelectedItem != null &&
+                            int.TryParse(IdleTriggerMinutesComboBox.SelectedItem.ToString(), out int idleMinutes))
+                        {
+                            parameters["IdleMinutes"] = idleMinutes;
+                        }
+                        else
+                        {
+                            parameters["IdleMinutes"] = 10; // Default to 10 minutes
+                        }
+                        break;
+                        
+                    case "EVENT":
+                        // Get the event log parameters
+                        if (EventLogComboBox.SelectedItem is ComboBoxItem selectedLog)
+                        {
+                            parameters["EventLogName"] = selectedLog.Content.ToString();
+                        }
+                        else
+                        {
+                            parameters["EventLogName"] = "Application"; // Default
+                        }
+                        
+                        parameters["EventSource"] = EventSourceTextBox.Text.Trim();
+                        
+                        if (!string.IsNullOrWhiteSpace(EventIdTextBox.Text) &&
+                            int.TryParse(EventIdTextBox.Text, out int eventId))
+                        {
+                            parameters["EventId"] = eventId;
+                        }
+                        break;
+                        
+                    case "REGISTRATION":
+                        // For registration trigger, the only parameter is delay
+                        if (RegistrationDelayComboBox.SelectedItem != null &&
+                            int.TryParse(RegistrationDelayComboBox.SelectedItem.ToString(), out int registrationDelay))
+                        {
+                            parameters["RegistrationDelay"] = registrationDelay;
+                        }
+                        else
+                        {
+                            parameters["RegistrationDelay"] = 0; // Default to no delay
+                        }
+                        break;
+                        
+                    case "SESSION_STATE_CHANGE":
+                        // Get the session state change type
+                        if (SessionStateComboBox.SelectedItem is ComboBoxItem selectedState && 
+                            selectedState.Tag != null &&
+                            int.TryParse(selectedState.Tag.ToString(), out int stateChange))
+                        {
+                            parameters["SessionStateChange"] = stateChange;
+                        }
+                        else
+                        {
+                            parameters["SessionStateChange"] = 1; // Default to ConsoleConnect
+                        }
+                        
+                        // Check if specific user is selected
+                        parameters["SessionAnyUser"] = SessionAnyUserRadioButton.IsChecked ?? true;
+                        
+                        if (SessionSpecificUserRadioButton.IsChecked == true && 
+                            SessionUserComboBox.SelectedItem != null)
+                        {
+                            parameters["SessionUser"] = SessionUserComboBox.SelectedItem.ToString();
+                        }
+                        
+                        // Get delay value
+                        if (SessionDelayComboBox.SelectedItem != null &&
+                            int.TryParse(SessionDelayComboBox.SelectedItem.ToString(), out int sessionDelay))
+                        {
+                            parameters["SessionDelay"] = sessionDelay;
+                        }
+                        else
+                        {
+                            parameters["SessionDelay"] = 0; // Default to no delay
                         }
                         break;
                 }
@@ -1603,6 +1736,9 @@ namespace ScriptSchedulerApp
                     case "Send Email":
                         AddSendEmailAction();
                         break;
+                    case "Display Message":
+                        AddDisplayMessageAction();
+                        break;
                 }
                 
                 // Update summary to show added action
@@ -1677,7 +1813,50 @@ namespace ScriptSchedulerApp
                 MessageBox.Show($"Error adding email action: {ex.Message}", "Action Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void AddDisplayMessageAction()
+        {
+            try
+            {
+                // Validate message fields
+                if (string.IsNullOrWhiteSpace(MessageTitleTextBox.Text) ||
+                    string.IsNullOrWhiteSpace(MessageTextTextBox.Text))
+                {
+                    MessageBox.Show("Message title and message text are required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                
+                // Create a display message action class
+                // We'll need to add this class first
+                var action = new DisplayMessageAction
+                {
+                    Title = MessageTitleTextBox.Text.Trim(),
+                    Message = MessageTextTextBox.Text.Trim()
+                };
+                
+                // Add to actions list
+                _taskActions.Add(action);
+                
+                MessageBox.Show($"Added action: {action.GetSummary()}", "Action Added", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error adding display message action: {ex.Message}", "Action Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     } // End partial class MainWindow
+
+    // Display message action class
+    internal class DisplayMessageAction : MainWindow.TaskAction
+    {
+        public override string ActionType => "Display Message";
+        public string Title { get; set; }
+        public string Message { get; set; }
+
+        public override string GetSummary()
+        {
+            return $"Display Message: {Title}";
+        }
+    }
 
     // Simple class to hold script details for the ListView
     public class ScriptItem

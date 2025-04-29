@@ -510,11 +510,11 @@ namespace ScriptSchedulerApp
                     if (otherTriggerParams.TryGetValue("AdditionalActions", out object additionalActionsObj) && 
                         additionalActionsObj is Dictionary<string, object> additionalActions)
                     {
-                        td.AddMultipleActions(additionalActions);
+                        td.AddStandardActionsFromDictionary(additionalActions); // Renamed method call
                     }
 
                     // Apply all other settings using the extension method
-                    td.EnhanceTaskDefinition(otherTriggerParams);
+                    TaskSchedulerExtensions.EnhanceTaskDefinition(td, otherTriggerParams); // Explicit call to resolve ambiguity
                     
                     // For backward compatibility, still use specific properties if they aren't handled by EnhanceTaskDefinition
                     // This will be removed later after full migration
